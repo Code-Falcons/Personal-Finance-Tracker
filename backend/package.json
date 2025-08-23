@@ -1,0 +1,26 @@
+{
+  "name": "backend-pft",
+  "version": "1.0.0",
+  "description": "backend of PFT project",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "nodemon server.js"
+  },
+  "keywords": [
+    "finance",
+    "fintech",
+    "tracks"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "^1.49.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "mongoose": "^8.18.0"
+  }
+}
