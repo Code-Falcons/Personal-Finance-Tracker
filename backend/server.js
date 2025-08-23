@@ -6,6 +6,9 @@ import path from "path";
 import notFound from "./middlewares/notFound.js";
 import errorHandler from "./middlewares/error.js";
 
+// import Routers
+import userRouter from "./routers/userRouter.js";
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,6 +21,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
+
+// Routes
+app.use("/user", userRouter);
 
 // Error handler middlewares
 app.use(notFound);
