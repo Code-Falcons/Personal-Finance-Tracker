@@ -5,9 +5,13 @@ import { fileURLToPath } from "url";
 import path from "path";
 import notFound from "./middlewares/notFound.js";
 import errorHandler from "./middlewares/error.js";
+import cookieParser from "cookie-parser";
+import cors from "cors";
 
 // import Routers
 import userRouter from "./routers/userRouter.js";
+import authRouter from "./routers/authRouter.js";
+import protectedRoutes from "./middlewares/authMiddleware.js";
 
 dotenv.config();
 
@@ -18,12 +22,20 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Middleware
+app.use(
+  cors({
+    origin: "http://localhost:3000", //FE
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
+app.use(cookieParser());
 
 // Routes
-app.use("/user", userRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/users", protectedRoutes, userRouter);
 
 // Error handler middlewares
 app.use(notFound);
