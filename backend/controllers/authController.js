@@ -8,11 +8,11 @@ import jwt from "jsonwebtoken";
 
 export const registerUser = async (req, res, next) => {
   try {
-    const { name, email, password, signedCurr } = req.body;
+    const { name, email, password, currency } = req.body;
 
     console.log("from auth register");
 
-    if (!name || !email || !password || !signedCurr) {
+    if (!name || !email || !password || !currency) {
       const error = new Error("Please provide all required fields");
       error.status = 400;
       return next(error);
@@ -33,8 +33,7 @@ export const registerUser = async (req, res, next) => {
       name,
       email,
       password: hashedPassword,
-      signedCurr,
-      currentCurr: signedCurr,
+      currency,
     });
 
     res.status(201).json({
@@ -42,8 +41,7 @@ export const registerUser = async (req, res, next) => {
       user: {
         name: newUser.name,
         email: newUser.email,
-        signedCurr: newUser.signedCurr,
-        currentCurr: newUser.currentCurr,
+        currency: newUser.currency,
       },
     });
   } catch (error) {
@@ -95,7 +93,7 @@ export const loginUser = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        signedCurr: user.signedCurr,
+        currency: user.currency,
         currentCurr: user.currentCurr,
       },
       tokens: {
@@ -178,6 +176,48 @@ export const logoutUser = async (req, res, next) => {
     });
 
     res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const googleLogin = async (req, res, next) => {
+  try {
+    const email = req.user.email;
+
+    console.log(email + "  from google login");
+
+    const user = await Users.findOne({ email });
+    if (!user) {
+      return res.redirect("/api/auth/failure");
+    }
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    user.refreshTokens.push(refreshToken);
+    await user.save();
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      message: "Google login successful",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        currency: user.currency,
+      },
+      tokens: {
+        accessToken,
+        refreshToken,
+      },
+    });
   } catch (error) {
     next(error);
   }

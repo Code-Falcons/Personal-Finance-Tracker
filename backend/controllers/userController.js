@@ -1,3 +1,5 @@
 export const printUser = (req, res) => {
-  return res.json({ message: "Bahaa Abbas" });
+  return res.json({
+    message: "Bahaa Abbas",
+  });
 };

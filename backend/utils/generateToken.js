@@ -6,8 +6,7 @@ export const generateAccessToken = (user) => {
       id: user._id,
       name: user.name,
       email: user.email,
-      signedCurr: user.signedCurr,
-      currentCurr: user.currentCurr,
+      currency: user.currency,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
@@ -22,8 +21,7 @@ export const generateRefreshToken = (user) => {
       id: user._id,
       name: user.name,
       email: user.email,
-      signedCurr: user.signedCurr,
-      currentCurr: user.currentCurr,
+      currency: user.currency,
     },
     process.env.REFRESH_TOKEN_SECRET,
     {

@@ -16,11 +16,7 @@ const userSchema = mongoose.Schema(
       required: true,
       unique: true,
     },
-    signedCurr: {
-      type: String,
-      required: true,
-    },
-    currentCurr: {
+    currency: {
       type: String,
       required: true,
     },
