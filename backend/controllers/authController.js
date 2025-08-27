@@ -133,7 +133,7 @@ export const refreshToken = async (req, res, next) => {
           return next(error);
         }
 
-        const newAccessToken = generateAccessToken(decoded.id);
+        const newAccessToken = generateAccessToken(user);
 
         res.status(200).json({
           accessToken: newAccessToken,
