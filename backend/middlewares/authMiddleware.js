@@ -10,7 +10,7 @@ const protectedRoutes = (req, res, next) => {
       token = req.headers.authorization.split(" ")[1];
       const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
       console.log(decoded);
-      req.user = decoded.id;
+      req.user = decoded;
       return next();
     } catch (error) {
       const err = new Error("Not authorized, token failed or expired");

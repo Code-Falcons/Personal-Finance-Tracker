@@ -45,6 +45,6 @@ router.get("/failure", (req, res) => {
 });
 
 router.get("/profile", protectedRoutes, (req, res) => {
-  res.json({ message: "Welcome to your profile", userId: req.user });
+  res.json({ message: "Welcome to your profile", user: req.user });
 });
 export default router;
