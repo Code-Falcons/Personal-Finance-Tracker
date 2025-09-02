@@ -98,7 +98,6 @@ export const loginUser = async (req, res, next) => {
       },
       tokens: {
         accessToken,
-        refreshToken,
       },
     });
   } catch (error) {
