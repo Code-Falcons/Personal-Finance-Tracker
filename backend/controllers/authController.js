@@ -94,7 +94,6 @@ export const loginUser = async (req, res, next) => {
         name: user.name,
         email: user.email,
         currency: user.currency,
-        currentCurr: user.currentCurr,
       },
       tokens: {
         accessToken,
