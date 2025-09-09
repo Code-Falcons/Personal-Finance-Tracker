@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../lib/api";
-import TransactionForm from "../components/TransactionForm";
+import TransactionForm from "./TransactionForm";
 
 export default function Transactions() {
   const [items, setItems] = useState([]);
