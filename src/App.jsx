@@ -5,6 +5,8 @@ import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Transactions from "./pages/Transactions.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import About from "./pages/About.jsx";
+import Contact from "./pages/Contact.jsx";
 
 export default function App() {
   const { user, logout } = useAuth();
@@ -23,6 +25,8 @@ export default function App() {
             <>
               <Link to="/dashboard">Dashboard</Link>
               <Link to="/transactions">Transactions</Link>
+              <Link to="/about">About</Link>
+              <Link to="/contact">Contact</Link>
               <button className="linklike" onClick={logout}>Logout</button>
             </>
           )}
@@ -35,6 +39,8 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>}/>
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<h2>404 – Page not found</h2>} />
       </Routes>
     </div>
