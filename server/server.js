@@ -14,6 +14,7 @@ import("./middlewares/authGoogle.js");
 
 // import Routers
 import userRouter from "./routers/userRouter.js";
+import transactionRouter from "./routers/transactionRouter.js";
 import authRouter from "./routers/authRouter.js";
 import protectedRoutes from "./middlewares/authMiddleware.js";
 
@@ -40,6 +41,8 @@ app.use(passport.initialize());
 app.use("/api/auth", authRouter);
 // app.use("/api/users", protectedRoutes, userRouter);
 app.use("/api/users", userRouter);
+
+app.use("/api/transactions", protectedRoutes ,transactionRouter);
 
 // Mock Frontned button  - google oauth2 section
 app.get("/api/google", (req, res) => {

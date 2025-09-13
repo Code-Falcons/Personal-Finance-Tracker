@@ -100,25 +100,27 @@ transactionSchema.set('runValidators', true);
 
 
 transactionSchema.index({ userId: 1, date: -1 });
-transactionSchema.index({ userId: 1, 'category.id': 1, date: -1 });
+transactionSchema.index({ userId: 1, 'category._id': 1, date: -1 });
 transactionSchema.index({ userId: 1, type: 1, date: -1 });
-transactionSchema.index({ 'saving.id': 1, date: -1 });
+transactionSchema.index({ 'saving._id': 1, date: -1 });
 
 transactionSchema.virtual('formattedAmount').get(function () {
   return this.type === TRANSACTION_TYPE.EXPENSE ? -Math.abs(this.amount) : Math.abs(this.amount);
 });
 
-transactionSchema.statics.getMonthlySummary = async function (userId, year, month) {
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+transactionSchema.statics.getSummary = async function (userId, startDate, endDate) {
+  const match = {
+    userId: new mongoose.Types.ObjectId(userId)
+  };
+
+  if (startDate || endDate) {
+    match.date = {};
+    if (startDate) match.date.$gte = new Date(startDate);
+    if (endDate) match.date.$lte = new Date(endDate);
+  }
 
   return await this.aggregate([
-    {
-      $match: {
-        userId: new mongoose.Types.ObjectId(userId),
-        date: { $gte: startDate, $lte: endDate }
-      }
-    },
+    { $match: match },
     {
       $group: {
         _id: '$type',
@@ -130,18 +132,25 @@ transactionSchema.statics.getMonthlySummary = async function (userId, year, mont
 };
 
 transactionSchema.statics.getCategoryWiseSpending = async function (userId, startDate, endDate) {
+  const match = {
+    userId: new mongoose.Types.ObjectId(userId),
+    type: TRANSACTION_TYPE.EXPENSE
+  };
+
+  if (startDate || endDate) {
+    match.date = {};
+    if (startDate) match.date.$gte = new Date(startDate);
+    if (endDate) match.date.$lte = new Date(endDate);
+  }
+  
   return await this.aggregate([
     {
-      $match: {
-        userId: new mongoose.Types.ObjectId(userId),
-        type: TRANSACTION_TYPE.EXPENSE,
-        date: { $gte: startDate, $lte: endDate }
-      }
+      $match: match
     },
     {
       $group: {
         _id: {
-          categoryId: '$category.id',
+          categoryId: '$category._id',
           categoryName: '$category.name'
         },
         total: { $sum: '$amount' },
