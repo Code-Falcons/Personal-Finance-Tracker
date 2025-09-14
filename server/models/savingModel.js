@@ -122,15 +122,12 @@ savingSchema.virtual('healthStatus').get(function () {
 
 savingSchema.methods.updateCurrentAmount = async function () {
   const Transaction = mongoose.model('transaction');
-  const User = mongoose.model('user');
-
-  const user = await User.findById(this.userId);
 
   const result = await Transaction.aggregate([
     {
       $match: {
         userId: this.userId,
-        'saving.id': this._id,
+        'saving._id': this._id,
         type: Transaction.TYPES.SAVING,
         date: { $gte: this.startDate, $lte: this.endDate }
       }
@@ -148,20 +145,30 @@ savingSchema.methods.updateCurrentAmount = async function () {
 
   if (this.currentAmount >= this.targetAmount) {
     this.status = SAVING_STATUS.COMPLETED;
-
-    await user.addNotification(`Your saving with Id="${this.title}" has been completed!`);
   }
 
-  return this.save();
+  return this.status;
 };
 
+savingSchema.methods.checkExpiredAndUpdate= async function () {
+  if (this.status === SAVING_STATUS.COMPLETED ||
+    this.status === SAVING_STATUS.PAUSED) return true;
+  
+  if (this.endDate <= new Date()) {
+    this.status = SAVING_STATUS.COMPLETED;
+    await this.save();
+    return true;
+  }
+
+  return false;
+}
 
 savingSchema.methods.pause = function () {
   if (this.status === SAVING_STATUS.COMPLETED) {
     throw new Error('Cannot pause a completed saving');
   }
   this.status = SAVING_STATUS.PAUSED;
-  return this.save();
+  return this.toObject();
 };
 
 
@@ -170,7 +177,7 @@ savingSchema.methods.resume = function () {
     throw new Error('Cannot resume a completed saving');
   }
   this.status = SAVING_STATUS.ACTIVE;
-  return this.save();
+  return this.toObject();
 };
 
 const Saving = mongoose.model('saving', savingSchema);

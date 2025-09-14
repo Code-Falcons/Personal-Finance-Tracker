@@ -96,10 +96,11 @@ budgetSchema.virtual('daysRemaining').get(function () {
 });
 
 
-budgetSchema.statics.findInProgressByUser = function (userId) {
+budgetSchema.statics.findInProgressByUserAndCategory = async function (userId, categoryId) {
   const now = new Date();
-  return this.find({
+  return await this.find({
     userId,
+    'category._id': categoryId,
     statis: BUDGET_STATUS.IN_PROGRESS,
     startDate: { $lte: now },
     endDate: { $gte: now }
@@ -109,14 +110,11 @@ budgetSchema.statics.findInProgressByUser = function (userId) {
 
 budgetSchema.methods.updateCurrentAmount = async function () {
   const Transaction = mongoose.model('transaction');
-  const User = mongoose.model('user');
-
-  const user = await User.findById(this.userId);
 
   const result = await Transaction.aggregate([
     {
       $match: {
-        userId: this.userId,
+        budgetId: this._id,
         'category._id': this.category._id,
         type: Transaction.TYPES.EXPENSE,
         date: {
@@ -139,11 +137,9 @@ budgetSchema.methods.updateCurrentAmount = async function () {
 
   if (this.currentAmount >= this.amountLimit) {
     this.status = BUDGET_STATUS.OVER;
-
-    await user.addNotification(`Budget With Id=${this._id} has been exceeded.`);
   }
 
-  return this.save();
+  return this.status;
 };
 
 
@@ -161,6 +157,17 @@ budgetSchema.methods.isOverlapped = async function () {
   return !!overlapping;
 };
 
+budgetSchema.methods.checkExpiredAndUpdate = async function () {
+  if (this.status === BUDGET_STATUS.OVER) return true;
+  
+  if (this.endDate <= new Date()) {
+    this.status = BUDGET_STATUS.OVER;
+    await this.save();
+    return true;
+  }
+  
+  return false;
+}
 
 let Budget = mongoose.model('budget', budgetSchema);
 Budget.STATUSES = BUDGET_STATUS;

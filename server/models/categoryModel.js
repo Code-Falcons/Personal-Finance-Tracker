@@ -29,8 +29,8 @@ categorySchema.virtual('transactionCount', {
   count: true
 });
 
-categorySchema.statics.findByUserAndName = function (userId, name) {
-  return this.find({ userId, name }).sort({ name: 1 });
+categorySchema.statics.findByUserAndName = async function (userId, name) {
+  return await this.find({ userId, name }).sort({ name: 1 });
 };
 
 categorySchema.methods.isInUse = async function () {

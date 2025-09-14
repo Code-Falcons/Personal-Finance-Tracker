@@ -89,31 +89,62 @@ userSchema.pre('save', function (next) {
   next();
 });
 
-userSchema.methods.addNotification = async function (message) {
+userSchema.methods.addNotification = function (message) {
   this.notifications.unshift({
     message,
     date: new Date(),
     read: false
   });
-  await this.save();
   return this.toObject();
 };
 
-userSchema.methods.markNotificationAsRead = async function (notificationId) {
+userSchema.methods.markNotificationAsRead = function (notificationId) {
   const notification = this.notifications.id(notificationId);
   if (notification) {
     notification.read = true;
-    await this.save();
   }
   return this.toObject();
 };
 
-userSchema.methods.markAllNotificationsAsRead = async function () {
+userSchema.methods.markAllNotificationsAsRead = function () {
   this.notifications.forEach(notification => {
     notification.read = true;
   });
-  await this.save();
   return this.toObject();
 };
+
+userSchema.methods.incrementTotalSaving = function(amount) {
+  if (this.financialProfile.currentBalance >= amount) {
+    this.financialProfile.totalSavings += amount;
+    this.financialProfile.currentBalance -= amount;
+    return { success: true, message: "Total savings updated" };
+  }
+  return { success: false, message: 'You don\'t have sufficient balance' };
+}
+
+userSchema.methods.decrementTotalSaving = function (amount){
+  if (this.financialProfile.totalSavings >= amount) {
+    this.financialProfile.totalSavings -= amount;
+    this.financialProfile.currentBalance += amount;
+    return { success: true, message: "Total savings updated" };
+  }
+  return { success: false, message: 'You don\'t have sufficient saving' };
+}
+
+userSchema.methods.incrementBalance = function (amount){
+  if (amount > 0) {
+    this.financialProfile.currentBalance += amount;
+    return { success: true, message: "Current balance updated"};
+  }
+  return { success: false, message: "Amount must be positive"};
+}
+
+userSchema.methods.decrementBalance = function (amount) { 
+  if ((this.financialProfile.currentBalance-amount) >= 0) {
+    this.financialProfile.currentBalance -= amount;
+    return { success: true, message: "Current balance updated" };
+  }
+  return { success: false, message: "You don\'t have sufficient balance" };
+}
 
 export default mongoose.model('user', userSchema);

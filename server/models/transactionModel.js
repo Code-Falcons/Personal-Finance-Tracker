@@ -66,10 +66,24 @@ const transactionSchema = new mongoose.Schema({
   },
   category: {
     type: categorySnapshotSchema,
-    required: [false, 'Category is required'],
+    required: false,
     validate: {
       validator: function (value) {
         if (value && this.type == TRANSACTION_TYPE.SAVING) {
+          return false;
+        }
+        return true;
+      },
+      message: 'Category reference is only allowed for income and expense transactions'
+    }
+  },
+  budgetId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Budget',
+    required: false,
+    validate: {
+      validator: function (value) {
+        if (value && (this.type == TRANSACTION_TYPE.SAVING || this.type == TRANSACTION_TYPE.INCOME)) {
           return false;
         }
         return true;
