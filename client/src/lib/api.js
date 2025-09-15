@@ -1,5 +1,5 @@
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+// src/lib/api.js
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 async function rawRequest(path, { method = "GET", body, token } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -9,11 +9,13 @@ async function rawRequest(path, { method = "GET", body, token } = {}) {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
-    credentials: "include", 
+    credentials: "include",
   });
 
   let data = null;
-  try { data = await res.json(); } catch {}
+  try { data = await res.json(); } catch (error) {
+    console.error("Failed to parse response:", error);
+  }
 
   if (!res.ok) {
     const msg = (data && (data.error || data.message)) || `HTTP ${res.status}`;
@@ -30,23 +32,22 @@ export async function requestWithRefresh(path, opts = {}) {
   const refreshToken = localStorage.getItem("pft_refresh_token");
 
   try {
-   
+
     return await rawRequest(path, { ...opts, token: accessToken || undefined });
   } catch (err) {
-   
+
     if (err.status === 401 && refreshToken) {
       try {
         const refresh = await rawRequest("/api/auth/refresh", {
           method: "POST",
-          body: { refreshToken },
         });
         if (refresh?.accessToken) {
           localStorage.setItem("pft_access_token", refresh.accessToken);
-         
+
           return await rawRequest(path, { ...opts, token: refresh.accessToken });
         }
       } catch {
-       
+        console.warn("Refresh token is invalid, logging out");
       }
     }
     throw err;
@@ -59,9 +60,8 @@ export const api = {
     rawRequest("/api/auth/register", { method: "POST", body: payload }),
   login: (payload) =>
     rawRequest("/api/auth/login", { method: "POST", body: payload }),
-  logout: (refreshToken) =>
-    rawRequest("/api/auth/logout", { method: "POST", body: { refreshToken } }),
-  me: () => requestWithRefresh("/api/auth/me", { method: "GET" }),
+  logout: () => rawRequest("/api/auth/logout", { method: "POST" }),
+  me: () => requestWithRefresh("/api/auth/profile", { method: "GET" }),
 
   // Transactions
   listTx: (params = {}) => {

@@ -60,7 +60,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const data = await api.register(payload);
-      
+
       if (data?.accessToken) localStorage.setItem("pft_access_token", data.accessToken);
       if (data?.refreshToken) localStorage.setItem("pft_refresh_token", data.refreshToken);
       if (data?.user) {
@@ -77,7 +77,9 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     const refresh = localStorage.getItem("pft_refresh_token");
-    try { if (refresh) await api.logout(refresh); } catch {}
+    try { if (refresh) await api.logout(refresh); } catch (error){ 
+      console.error("Logout error:", error);
+    }
     localStorage.removeItem("pft_access_token");
     localStorage.removeItem("pft_refresh_token");
     localStorage.removeItem("pft_user");

@@ -36,12 +36,32 @@ export const registerUser = async (req, res, next) => {
       currency,
     });
 
+    // res.status(201).json({
+    //   message: "User registered successfully",
+    //   user: {
+    //     name: newUser.name,
+    //     email: newUser.email,
+    //     currency: newUser.currency,
+    //   },
+    // });
+    // After creating newUser:
+    const accessToken = generateAccessToken(newUser);
+    const refreshToken = generateRefreshToken(newUser);
+
+    newUser.refreshTokens.push(refreshToken);
+    await newUser.save();
+
     res.status(201).json({
-      message: "User registered successfully",
+      message: "User registered and logged in successfully",
       user: {
+        id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         currency: newUser.currency,
+      },
+      tokens: {
+        accessToken,
+        refreshToken,
       },
     });
   } catch (error) {
