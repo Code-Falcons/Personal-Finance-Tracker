@@ -55,7 +55,7 @@ export const addTransaction = async (req, res, next) => {
                 return next(err);
             } 
             if (await saving.checkExpiredAndUpdate()) {
-                const err = new Error("Cannot add transaction to an expired saving.");
+                const err = new Error("Cannot add transaction to an expired or paused saving.");
                 err.statusCode = 409;
                 return next(err);
             }
@@ -138,3 +138,93 @@ export const addTransaction = async (req, res, next) => {
         next(error);
     }
 };
+
+export const deleteTransaction = async (req, res, next) => { 
+    try {
+        const userId = req.user.id;
+        const transactionId = req.params.id;
+        
+        const user =  await User.findById(userId);
+        const transaction = await Transaction.findById(transactionId);
+        
+        if (!transaction) {
+            const err = new Error("Transaction not found");
+            err.statusCode = 404;
+            return next(err);
+        }
+
+        if (transaction.type === Transaction.TYPES.SAVING) {
+            var saving = await Saving.findById(transaction.saving._id);
+            if(!saving) {
+                const err = new Error("Associated saving not found");
+                err.statusCode = 404;
+                return next(err);
+            }
+            if (saving.status == Saving.STATUSES.PAUSED) {
+                const err = new Error("Cannot delete transaction from an paused saving.");
+                err.statusCode = 409;
+                return next(err);
+            }
+
+            let result = user.decrementTotalSaving(transaction.amount);
+            if (!result.success) {
+                const err = new Error(result.message);
+                err.statusCode = 409;
+                return next(err);
+            }
+
+            await transaction.deleteOne();
+            await saving.updateCurrentAmount();
+            await user.save();
+
+            if (saving.targetAmount > saving.currentAmount &&
+            saving.endDate > new Date()) {
+                
+                saving.status = Saving.STATUSES.ACTIVE;
+            }
+            await saving.save();            
+
+        } else if (transaction.type === Transaction.TYPES.EXPENSE) {
+            let result = user.incrementBalance(transaction.amount);
+            if (!result.success) {
+                const err = new Error(result.message);
+                err.statusCode = 409;
+                return next(err);
+            }
+
+            await transaction.deleteOne();
+            await user.save();
+            
+            if (transaction.budgetId) {
+                var budget = await Budget.findById(transaction.budgetId);
+                if(!budget) {
+                    const err = new Error("Deleted, but associated budget not found");
+                    err.statusCode = 404;
+                    return next(err);
+                }
+                
+                await budget.updateCurrentAmount();
+    
+                if (budget.amountLimit > budget.currentAmount &&
+                    budget.endDate > new Date()) {
+                    budget.status = Budget.STATUSES.IN_PROGRESS;
+                }
+                await budget.save();   
+            }
+        } else {
+            let result = user.decrementBalance(transaction.amount);
+            if (!result.success) {
+                const err = new Error(result.message);
+                err.statusCode = 409;
+                return next(err);
+            }
+            
+            await transaction.deleteOne();
+            await user.save();
+        }
+
+        res.status(200).json({ success: true, message: "Transaction deleted successfully" });
+    } catch (error) { 
+        next(error);
+    }
+}
