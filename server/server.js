@@ -42,7 +42,8 @@ app.use(passport.initialize());
 app.use("/api/auth", authRouter);
 app.use("/api/users", protectedRoutes, userRouter);
 app.use("/api/transactions", protectedRoutes, transactionRouter);
-app.use("/api/category", protectedRoutes, categoryRouter);
+// app.use("/api/category", protectedRoutes, categoryRouter);
+app.use("/api/category", categoryRouter);
 
 // Mock Frontned button  - google oauth2 section
 app.get("/api/google", (req, res) => {
