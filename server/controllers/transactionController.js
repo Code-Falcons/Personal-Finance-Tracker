@@ -37,13 +37,13 @@ export const addTransaction = async (req, res, next) => {
         const userId = req.user.id;
         const user = await User.findById(userId);
 
-        const { amount, type, categoryId, date, notes, savingId, budgetId } = req.body;
+        let { amount, type, categoryId, date, notes, savingId, budgetId } = req.body;
+        date = date === null ? null : new Date(date);
 
         const newTransaction = new Transaction({
             userId: userId,
             amount,
             type,
-            date,
             notes,
         });
 
@@ -53,13 +53,19 @@ export const addTransaction = async (req, res, next) => {
                 const err = new Error("SavingId is invalid");
                 err.statusCode = 400;
                 return next(err);
-            } 
+            }
             if (await saving.checkExpiredAndUpdate()) {
                 const err = new Error("Cannot add transaction to an expired or paused saving.");
                 err.statusCode = 409;
                 return next(err);
             }
+            if (date <= saving.startDate || date >= saving.endDate) {
+                const err = new Error("Transaction date must be between saving start date and end date.");
+                err.statusCode = 400;
+                return next(err);
+            }
 
+            newTransaction.date = date;
             newTransaction.saving = { _id: savingId, title: saving.title };
             let result = user.incrementTotalSaving(amount);
 
@@ -94,11 +100,17 @@ export const addTransaction = async (req, res, next) => {
                         err.statusCode = 409;
                         return next(err);
                     }
+                    if (date <= budget.startDate || date >= budget.endDate) {
+                        const err = new Error("Transaction date must be between budget start date and end date.");
+                        err.statusCode = 400;
+                        return next(err);
+                    }
 
                     newTransaction.budgetId = budgetId;
                 }
                 result = user.decrementBalance(amount);
             }
+            newTransaction.date = date;
 
             if (!result.success) {
                 const err = new Error(result.message);
@@ -139,14 +151,14 @@ export const addTransaction = async (req, res, next) => {
     }
 };
 
-export const deleteTransaction = async (req, res, next) => { 
+export const deleteTransaction = async (req, res, next) => {
     try {
         const userId = req.user.id;
         const transactionId = req.params.id;
-        
-        const user =  await User.findById(userId);
+
+        const user = await User.findById(userId);
         const transaction = await Transaction.findById(transactionId);
-        
+
         if (!transaction) {
             const err = new Error("Transaction not found");
             err.statusCode = 404;
@@ -155,7 +167,7 @@ export const deleteTransaction = async (req, res, next) => {
 
         if (transaction.type === Transaction.TYPES.SAVING) {
             var saving = await Saving.findById(transaction.saving._id);
-            if(!saving) {
+            if (!saving) {
                 const err = new Error("Associated saving not found");
                 err.statusCode = 404;
                 return next(err);
@@ -178,11 +190,11 @@ export const deleteTransaction = async (req, res, next) => {
             await user.save();
 
             if (saving.targetAmount > saving.currentAmount &&
-            saving.endDate > new Date()) {
-                
+                saving.endDate > new Date()) {
+
                 saving.status = Saving.STATUSES.ACTIVE;
             }
-            await saving.save();            
+            await saving.save();
 
         } else if (transaction.type === Transaction.TYPES.EXPENSE) {
             let result = user.incrementBalance(transaction.amount);
@@ -194,22 +206,22 @@ export const deleteTransaction = async (req, res, next) => {
 
             await transaction.deleteOne();
             await user.save();
-            
+
             if (transaction.budgetId) {
                 var budget = await Budget.findById(transaction.budgetId);
-                if(!budget) {
+                if (!budget) {
                     const err = new Error("Deleted, but associated budget not found");
                     err.statusCode = 404;
                     return next(err);
                 }
-                
+
                 await budget.updateCurrentAmount();
-    
+
                 if (budget.amountLimit > budget.currentAmount &&
                     budget.endDate > new Date()) {
                     budget.status = Budget.STATUSES.IN_PROGRESS;
                 }
-                await budget.save();   
+                await budget.save();
             }
         } else {
             let result = user.decrementBalance(transaction.amount);
@@ -218,13 +230,137 @@ export const deleteTransaction = async (req, res, next) => {
                 err.statusCode = 409;
                 return next(err);
             }
-            
+
             await transaction.deleteOne();
             await user.save();
         }
 
         res.status(200).json({ success: true, message: "Transaction deleted successfully" });
-    } catch (error) { 
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getTransactions = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const transactions = await Transaction.find({ userId: userId }).sort({ date: -1 });
+        res.status(200).json({ success: true, data: transactions });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const updateTransaction = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId);
+        const transactionId = req.params.id;
+        let { amount, notes } = req.body;
+
+        const transaction = await Transaction.findById(transactionId);
+
+        if (!transaction) {
+            const err = new Error("Transaction not found");
+            err.statusCode = 404;
+            return next(err);
+        }
+
+        if (amount && transaction.amount !== amount && amount > 0) {
+            var result;
+            if (transaction.type === Transaction.TYPES.SAVING) {
+                if (transaction.amount < amount)
+                    result = user.incrementTotalSaving(amount - transaction.amount);
+                else
+                    result = user.decrementTotalSaving(transaction.amount - amount);
+            } else {
+                if (transaction.type === Transaction.TYPES.INCOME) {
+                    if (transaction.amount < amount)
+                        result = user.incrementBalance(amount - transaction.amount);
+                    else
+                        result = user.decrementBalance(transaction.amount - amount);
+                } else {
+                    if (transaction.amount < amount)
+                        result = user.decrementBalance(amount - transaction.amount);
+                    else
+                        result = user.incrementBalance(transaction.amount - amount);
+                }
+            }
+
+            if (!result.success) {
+                const err = new Error(result.message);
+                err.statusCode = 409;
+                return next(err);
+            }
+            transaction.amount = amount;
+        }
+
+        if (notes) {
+            transaction.notes = notes;
+        }
+
+        if (transaction.type === Transaction.TYPES.SAVING) {
+            var saving = await Saving.findById(transaction.saving._id);
+
+            if (!saving) {
+                const err = new Error("Associated saving not found");
+                err.statusCode = 404;
+                return next(err);
+            }
+
+            await transaction.save();
+
+            let result = await saving.updateCurrentAmount();
+            
+            if (result === Saving.STATUSES.COMPLETED) {
+                user.addNotification("Congratulations! You've completed your saving goal: " +
+                    saving.title + ", which is from " + saving.startDate.toDateString() +
+                    " to " + saving.endDate.toDateString());
+            }
+            await user.save();
+            
+            if (saving.targetAmount > saving.currentAmount &&
+                saving.endDate > new Date()) {
+                saving.status = Saving.STATUSES.ACTIVE;
+            }
+            await saving.save();
+
+        } else if (transaction.type === Transaction.TYPES.EXPENSE) {
+            if (transaction.budgetId) {
+                var budget = await Budget.findById(transaction.budgetId);
+                
+                if (!budget) {
+                    const err = new Error("Associated budget not found");
+                    err.statusCode = 404;
+                    return next(err);
+                } 
+
+                await transaction.save();
+
+                let result = await budget.updateCurrentAmount();
+
+                if (result === Budget.STATUSES.OVER) {
+                    user.addNotification("Alert! Your budget reached the limit for: "
+                        + budget.category.name + ", which is from " + budget.startDate.toDateString() +
+                        " to " + budget.endDate.toDateString());
+                }
+                await user.save();
+
+                if (budget.amountLimit > budget.currentAmount &&
+                    budget.endDate > new Date()) {
+                    budget.status = Budget.STATUSES.IN_PROGRESS;
+                } else {
+
+                }
+                await budget.save();
+            }
+        }
+        
+        await transaction.save();
+        await user.save();
+
+        res.status(200).json({ success: true, data: transaction });
+    } catch (error) {
         next(error);
     }
 }
