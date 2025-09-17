@@ -6,13 +6,6 @@ const SAVING_STATUS = Object.freeze({
   COMPLETED: "completed"
 });
 
-const HEALTH_STATUS = Object.freeze({
-  OVERDUE: "overdue",
-  ON_TRACK: "on-track",
-  BEHIND: "behind"
-});
-
-
 const savingSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -105,21 +98,6 @@ savingSchema.virtual('dailySavingsNeeded').get(function () {
   return Math.round((this.remainingAmount / daysRemaining) * 100) / 100;
 });
 
-savingSchema.virtual('healthStatus').get(function () {
-  if (this.status === SAVING_STATUS.COMPLETED) return SAVING_STATUS.COMPLETED;
-  if (this.status === SAVING_STATUS.PAUSED) return SAVING_STATUS.PAUSED;
-
-  const now = new Date();
-  if (now > this.endDate && this.currentAmount < this.targetAmount) return HEALTH_STATUS.OVERDUE;
-
-  const progressPercentage = this.progressPercentage;
-  const timeElapsedPercentage = ((now - this.startDate) / (this.endDate - this.startDate)) * 100;
-
-  if (progressPercentage >= timeElapsedPercentage) return HEALTH_STATUS.ON_TRACK;
-  return HEALTH_STATUS.BEHIND;
-});
-
-
 savingSchema.methods.updateCurrentAmount = async function () {
   const Transaction = mongoose.model('transaction');
 
@@ -182,6 +160,5 @@ savingSchema.methods.resume = function () {
 
 const Saving = mongoose.model('saving', savingSchema);
 Saving.STATUSES = SAVING_STATUS;
-Saving.HEALTH_STATUSES = HEALTH_STATUS;
 
 export default Saving;

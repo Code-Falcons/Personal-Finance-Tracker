@@ -113,8 +113,8 @@ userSchema.methods.markAllNotificationsAsRead = function () {
   return this.toObject();
 };
 
-userSchema.methods.incrementTotalSaving = function(amount) {
-  if (this.financialProfile.currentBalance >= amount) {
+userSchema.methods.incrementTotalSaving = function (amount) {
+  if (amount > 0 && this.financialProfile.currentBalance >= amount) {
     this.financialProfile.totalSavings += amount;
     this.financialProfile.currentBalance -= amount;
     return { success: true, message: "Total savings updated" };
@@ -122,8 +122,8 @@ userSchema.methods.incrementTotalSaving = function(amount) {
   return { success: false, message: 'You don\'t have sufficient balance' };
 }
 
-userSchema.methods.decrementTotalSaving = function (amount){
-  if (this.financialProfile.totalSavings >= amount) {
+userSchema.methods.decrementTotalSaving = function (amount) {
+  if (amount > 0 && this.financialProfile.totalSavings >= amount) {
     this.financialProfile.totalSavings -= amount;
     this.financialProfile.currentBalance += amount;
     return { success: true, message: "Total savings updated" };
@@ -131,16 +131,16 @@ userSchema.methods.decrementTotalSaving = function (amount){
   return { success: false, message: 'You don\'t have sufficient saving' };
 }
 
-userSchema.methods.incrementBalance = function (amount){
+userSchema.methods.incrementBalance = function (amount) {
   if (amount > 0) {
     this.financialProfile.currentBalance += amount;
-    return { success: true, message: "Current balance updated"};
+    return { success: true, message: "Current balance updated" };
   }
-  return { success: false, message: "Amount must be positive"};
+  return { success: false, message: "Amount must be positive" };
 }
 
-userSchema.methods.decrementBalance = function (amount) { 
-  if ((this.financialProfile.currentBalance-amount) >= 0) {
+userSchema.methods.decrementBalance = function (amount) {
+  if (amount > 0 && (this.financialProfile.currentBalance - amount) >= 0) {
     this.financialProfile.currentBalance -= amount;
     return { success: true, message: "Current balance updated" };
   }
