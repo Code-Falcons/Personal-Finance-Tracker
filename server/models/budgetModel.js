@@ -101,10 +101,10 @@ budgetSchema.statics.findInProgressByUserAndCategory = async function (userId, c
   return await this.find({
     userId,
     'category._id': categoryId,
-    statis: BUDGET_STATUS.IN_PROGRESS,
+    status: BUDGET_STATUS.IN_PROGRESS,
     startDate: { $lte: now },
     endDate: { $gte: now }
-  }).sort({ endDate: 1 });
+  });
 };
 
 
@@ -167,6 +167,21 @@ budgetSchema.methods.checkExpiredAndUpdate = async function () {
   }
   
   return false;
+}
+
+budgetSchema.methods.addTransactions = async function () {
+  const Transaction = mongoose.model('transaction');
+
+  await Transaction.updateMany(
+    {
+      userId: this.userId,
+      'category._id': this.category._id,
+      type: Transaction.TYPES.EXPENSE,
+      date: { $gte: this.startDate, $lte: this.endDate },
+      budgetId: { $exists: false }
+    },
+    { $set: { budgetId: this._id } }
+  );
 }
 
 let Budget = mongoose.model('budget', budgetSchema);

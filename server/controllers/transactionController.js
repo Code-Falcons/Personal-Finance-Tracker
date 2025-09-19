@@ -37,8 +37,7 @@ export const addTransaction = async (req, res, next) => {
         const userId = req.user.id;
         const user = await User.findById(userId);
 
-        let { amount, type, categoryId, date, notes, savingId, budgetId } = req.body;
-        date = date === null ? null : new Date(date);
+        let { amount, type, categoryId, notes, savingId, budgetId } = req.body;
 
         const newTransaction = new Transaction({
             userId: userId,
@@ -59,13 +58,7 @@ export const addTransaction = async (req, res, next) => {
                 err.statusCode = 409;
                 return next(err);
             }
-            if (date <= saving.startDate || date >= saving.endDate) {
-                const err = new Error("Transaction date must be between saving start date and end date.");
-                err.statusCode = 400;
-                return next(err);
-            }
 
-            newTransaction.date = date;
             newTransaction.saving = { _id: savingId, title: saving.title };
             let result = user.incrementTotalSaving(amount);
 
@@ -100,17 +93,11 @@ export const addTransaction = async (req, res, next) => {
                         err.statusCode = 409;
                         return next(err);
                     }
-                    if (date <= budget.startDate || date >= budget.endDate) {
-                        const err = new Error("Transaction date must be between budget start date and end date.");
-                        err.statusCode = 400;
-                        return next(err);
-                    }
 
                     newTransaction.budgetId = budgetId;
                 }
                 result = user.decrementBalance(amount);
             }
-            newTransaction.date = date;
 
             if (!result.success) {
                 const err = new Error(result.message);
@@ -243,9 +230,28 @@ export const deleteTransaction = async (req, res, next) => {
 
 export const getTransactions = async (req, res, next) => {
     try {
-        const userId = req.user.id;
-        const transactions = await Transaction.find({ userId: userId }).sort({ date: -1 });
-        res.status(200).json({ success: true, data: transactions });
+        const userID = req.user.id;
+
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+
+        const transactions = await Transaction.find({ userId: userID })
+            .skip(skip)
+            .limit(limit)
+            .sort({ date: -1 });
+
+        if (!transactions) {
+            const err = new Error("No transactions found");
+            err.statusCode = 404;
+            return next(err);
+        }
+
+        res.status(200).json({
+            success: true,
+            data: transactions
+        });
+
     } catch (error) {
         next(error);
     }
@@ -311,14 +317,14 @@ export const updateTransaction = async (req, res, next) => {
             await transaction.save();
 
             let result = await saving.updateCurrentAmount();
-            
+
             if (result === Saving.STATUSES.COMPLETED) {
                 user.addNotification("Congratulations! You've completed your saving goal: " +
                     saving.title + ", which is from " + saving.startDate.toDateString() +
                     " to " + saving.endDate.toDateString());
             }
             await user.save();
-            
+
             if (saving.targetAmount > saving.currentAmount &&
                 saving.endDate > new Date()) {
                 saving.status = Saving.STATUSES.ACTIVE;
@@ -328,12 +334,12 @@ export const updateTransaction = async (req, res, next) => {
         } else if (transaction.type === Transaction.TYPES.EXPENSE) {
             if (transaction.budgetId) {
                 var budget = await Budget.findById(transaction.budgetId);
-                
+
                 if (!budget) {
                     const err = new Error("Associated budget not found");
                     err.statusCode = 404;
                     return next(err);
-                } 
+                }
 
                 await transaction.save();
 
@@ -355,7 +361,7 @@ export const updateTransaction = async (req, res, next) => {
                 await budget.save();
             }
         }
-        
+
         await transaction.save();
         await user.save();
 
