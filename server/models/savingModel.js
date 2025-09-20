@@ -98,6 +98,17 @@ savingSchema.virtual('dailySavingsNeeded').get(function () {
   return Math.round((this.remainingAmount / daysRemaining) * 100) / 100;
 });
 
+savingSchema.statics.findActiveByUser = async function (userId) {
+  const now = new Date();
+  return await this.find({
+    userId,
+    status: SAVING_STATUS.ACTIVE,
+    startDate: { $lte: now },
+    endDate: { $gte: now }
+  });
+};
+
+
 savingSchema.methods.updateCurrentAmount = async function () {
   const Transaction = mongoose.model('transaction');
 
@@ -140,6 +151,24 @@ savingSchema.methods.checkExpiredAndUpdate= async function () {
 
   return false;
 }
+
+savingSchema.methods.sumRelatedTransaction = async function () {
+  const Transaction = mongoose.model('transaction');
+  const aggregation = await Transaction.aggregate([
+    {
+      $match: {
+          userId: new mongoose.Types.ObjectId(this.userId),
+          'saving._id': new mongoose.Types.ObjectId(this._id)
+      }
+    },
+    { $group: { _id: null, total: { $sum: "$amount" } } }
+  ]);
+
+  const totalAmount = aggregation[0]?.total || 0;
+
+  return totalAmount;
+}
+
 
 savingSchema.methods.pause = function () {
   if (this.status === SAVING_STATUS.COMPLETED) {

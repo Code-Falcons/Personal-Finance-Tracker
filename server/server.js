@@ -17,6 +17,7 @@ import userRouter from "./routers/userRouter.js";
 import transactionRouter from "./routers/transactionRouter.js";
 import budgetRouter from "./routers/budgetRouter.js";
 import authRouter from "./routers/authRouter.js";
+import savingRouter from "./routers/savingRouter.js";
 import protectedRoutes from "./middlewares/authMiddleware.js";
 import categoryRouter from "./routers/categoryRouter.js";
 
@@ -47,6 +48,8 @@ app.use("/api/transactions", protectedRoutes, transactionRouter);
 app.use("/api/category", categoryRouter);
 
 app.use("/api/budgets", protectedRoutes, budgetRouter);
+
+app.use("/api/savings", protectedRoutes, savingRouter);
 
 // Mock Frontned button  - google oauth2 section
 app.get("/api/google", (req, res) => {

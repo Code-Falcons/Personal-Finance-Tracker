@@ -93,6 +93,11 @@ export const addTransaction = async (req, res, next) => {
                         err.statusCode = 409;
                         return next(err);
                     }
+                    if (new Date() < budget.startDate) {
+                        const err = new Error("Cannot add transaction to a budget that hasn't started yet.");
+                        err.statusCode = 409;
+                        return next(err);
+                    }
 
                     newTransaction.budgetId = budgetId;
                 }

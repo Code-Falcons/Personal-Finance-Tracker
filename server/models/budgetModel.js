@@ -148,7 +148,6 @@ budgetSchema.methods.isOverlapped = async function () {
     _id: { $ne: this._id },
     userId: this.userId,
     'category._id': this.category._id,
-    status: BUDGET_STATUS.IN_PROGRESS,
     startDate: { $lte: this.endDate },
     endDate: { $gte: this.startDate }
   });
@@ -159,14 +158,27 @@ budgetSchema.methods.isOverlapped = async function () {
 
 budgetSchema.methods.checkExpiredAndUpdate = async function () {
   if (this.status === BUDGET_STATUS.OVER) return true;
-  
+
   if (this.endDate <= new Date()) {
     this.status = BUDGET_STATUS.OVER;
     await this.save();
     return true;
   }
-  
+
   return false;
+}
+
+budgetSchema.methods.isThereTransactionsAttached = async function () {
+  const Transaction = mongoose.model('transaction');
+  const isThere = await Transaction.findOne({
+    budgetId: this._id,
+    userId: this.userId,
+    'category._id': this.category._id,
+    type: Transaction.TYPES.EXPENSE,
+    date: { $gte: this.startDate, $lte: this.endDate },
+  });
+
+  return isThere;
 }
 
 budgetSchema.methods.addTransactions = async function () {
