@@ -18,6 +18,7 @@ import transactionRouter from "./routers/transactionRouter.js";
 import budgetRouter from "./routers/budgetRouter.js";
 import authRouter from "./routers/authRouter.js";
 import protectedRoutes from "./middlewares/authMiddleware.js";
+import categoryRouter from "./routers/categoryRouter.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,10 +41,10 @@ app.use(passport.initialize());
 
 // Routes
 app.use("/api/auth", authRouter);
-// app.use("/api/users", protectedRoutes, userRouter);
 app.use("/api/users", protectedRoutes, userRouter);
-
 app.use("/api/transactions", protectedRoutes, transactionRouter);
+// app.use("/api/category", protectedRoutes, categoryRouter);
+app.use("/api/category", categoryRouter);
 
 app.use("/api/budgets", protectedRoutes, budgetRouter);
 
