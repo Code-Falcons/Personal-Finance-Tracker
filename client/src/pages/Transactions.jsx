@@ -1,157 +1,575 @@
-// 
 // src/pages/Transactions.jsx
-import { useEffect, useMemo, useState, useRef } from "react";
-import { api } from "../lib/api";
-import TransactionForm from "../components/TransactionForm";
+import React, { useState, useMemo } from 'react';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  Alert,
+  Grid,
+  TextField,
+  MenuItem,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  useMediaQuery,
+  useTheme,
+  Collapse,
+  Divider,
+} from '@mui/material';
+import {
+  DataGrid,
+  GridToolbarContainer,
+  GridToolbarFilterButton,
+  GridToolbarDensitySelector,
+} from '@mui/x-data-grid';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  FilterList as FilterListIcon,
+  Close as CloseIcon,
+} from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { format, parseISO } from 'date-fns';
 
-// get current month in YYYY-MM format
-function currentMonth() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
+// Mock data
+const mockCategories = [
+  'Salary',
+  'Freelance',
+  'Investments',
+  'Rent',
+  'Groceries',
+  'Utilities',
+  'Transportation',
+  'Dining',
+  'Entertainment',
+  'Shopping',
+  'Healthcare',
+  'Other',
+];
 
-export default function Transactions() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(null);
-  const [filter, setFilter] = useState({ q: "", type: "all", month: currentMonth() });
+const initialTransactions = [
+  { id: 1, date: '2023-05-15', category: 'Salary', type: 'Income', amount: 3500, notes: 'Monthly salary' },
+  { id: 2, date: '2023-05-16', category: 'Rent', type: 'Expense', amount: 1200, notes: 'Apartment rent' },
+  { id: 3, date: '2023-05-17', category: 'Groceries', type: 'Expense', amount: 240, notes: 'Weekly shopping' },
+  { id: 4, date: '2023-05-18', category: 'Freelance', type: 'Income', amount: 750, notes: 'Website project' },
+  { id: 5, date: '2023-05-19', category: 'Utilities', type: 'Expense', amount: 180, notes: 'Electricity & water' },
+  { id: 6, date: '2023-05-20', category: 'Dining', type: 'Expense', amount: 95, notes: 'Dinner with friends' },
+  { id: 7, date: '2023-05-21', category: 'Investments', type: 'Income', amount: 200, notes: 'Dividend payment' },
+  { id: 8, date: '2023-05-22', category: 'Transportation', type: 'Expense', amount: 65, notes: 'Gas refill' },
+];
 
-  const searchTimeout = useRef(null);
+const budgetAlerts = [
+  { id: 1, category: 'Entertainment', spent: 120, budget: 100, exceeded: 20 },
+];
 
-  // fetch transactions
-  async function load() {
-    setLoading(true);
-    try {
-      const data = await api.listTx({ month: filter.month, q: filter.q, type: filter.type });
-      setItems(data?.transactions || []);
-    } catch (e) {
-      console.error(e);
-      alert(e.message || "Failed to load transactions");
-      setItems([]);
-    } finally {
-      setLoading(false);
+const Transactions = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  // State management
+  const [transactions, setTransactions] = useState(initialTransactions);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [filters, setFilters] = useState({
+    dateRange: [null, null],
+    type: 'All',
+    category: 'All',
+    search: '',
+  });
+  const [showFilters, setShowFilters] = useState(!isMobile);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    date: new Date(),
+    type: 'Expense',
+    category: '',
+    amount: '',
+    notes: '',
+  });
+  
+  const [formErrors, setFormErrors] = useState({});
+
+  // Filter transactions
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(transaction => {
+      // Date range filter
+      if (filters.dateRange[0] && new Date(transaction.date) < filters.dateRange[0]) return false;
+      if (filters.dateRange[1] && new Date(transaction.date) > filters.dateRange[1]) return false;
+      
+      // Type filter
+      if (filters.type !== 'All' && transaction.type !== filters.type) return false;
+      
+      // Category filter
+      if (filters.category !== 'All' && transaction.category !== filters.category) return false;
+      
+      // Search filter
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        return (
+          transaction.category.toLowerCase().includes(searchLower) ||
+          transaction.notes.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return true;
+    });
+  }, [transactions, filters]);
+
+  // Handle form changes
+  const handleFormChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user types
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: '' }));
     }
-  }
+  };
 
-  // useEffect مع debounce للبحث
-  useEffect(() => {
-    let active = true;
+  // Validate form
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.date) errors.date = 'Date is required';
+    if (!formData.type) errors.type = 'Type is required';
+    if (!formData.category) errors.category = 'Category is required';
+    if (!formData.amount || formData.amount <= 0) errors.amount = 'Valid amount is required';
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
-    if (searchTimeout.current) clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(() => {
-      if (!active) return;
-      load();
-    }, 300); // تأخير 300ms للبحث
-
-    return () => {
-      active = false;
-      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+  // Handle form submit
+  const handleFormSubmit = () => {
+    if (!validateForm()) return;
+    
+    const newTransaction = {
+      id: editingId || Date.now(),
+      date: format(formData.date, 'yyyy-MM-dd'),
+      type: formData.type,
+      category: formData.category,
+      amount: parseFloat(formData.amount),
+      notes: formData.notes,
     };
-  }, [filter.month, filter.q, filter.type]);
+    
+    if (editingId) {
+      setTransactions(prev => 
+        prev.map(t => t.id === editingId ? newTransaction : t)
+      );
+    } else {
+      setTransactions(prev => [...prev, newTransaction]);
+    }
+    
+    handleCloseDialog();
+  };
 
-  // حساب المجاميع
-  const total = useMemo(() => {
-    const inc = items.filter(i => i.type === "income").reduce((s, i) => s + Number(i.amount || 0), 0);
-    const exp = items.filter(i => i.type === "expense").reduce((s, i) => s + Number(i.amount || 0), 0);
-    return { income: inc, expense: exp, balance: inc - exp };
-  }, [items]);
+  // Handle edit
+  const handleEdit = (transaction) => {
+    setFormData({
+      date: parseISO(transaction.date),
+      type: transaction.type,
+      category: transaction.category,
+      amount: transaction.amount.toString(),
+      notes: transaction.notes,
+    });
+    setEditingId(transaction.id);
+    setOpenDialog(true);
+  };
 
-  // عمليات CRUD
-  async function createTx(data) {
-    await api.createTx(data);
-    await load();
-  }
+  // Handle delete
+  const handleDelete = (id) => {
+    setTransactions(prev => prev.filter(t => t.id !== id));
+  };
 
-  async function updateTx(id, data) {
-    await api.updateTx(id, data);
-    setEditing(null);
-    await load();
-  }
+  // Open dialog for new transaction
+  const handleOpenDialog = () => {
+    setFormData({
+      date: new Date(),
+      type: 'Expense',
+      category: '',
+      amount: '',
+      notes: '',
+    });
+    setEditingId(null);
+    setFormErrors({});
+    setOpenDialog(true);
+  };
 
-  async function deleteTx(id) {
-    if (!confirm("Delete this transaction?")) return;
-    await api.deleteTx(id);
-    await load();
-  }
+  // Close dialog
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setEditingId(null);
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (field, value) => {
+    setFilters(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Reset filters
+  const handleResetFilters = () => {
+    setFilters({
+      dateRange: [null, null],
+      type: 'All',
+      category: 'All',
+      search: '',
+    });
+  };
+
+  // DataGrid columns
+  const columns = [
+    {
+      field: 'date',
+      headerName: 'Date',
+      width: 120,
+      renderCell: (params) => format(parseISO(params.value), 'MMM dd, yyyy'),
+    },
+    {
+      field: 'category',
+      headerName: 'Category',
+      width: 150,
+      flex: 1,
+    },
+    {
+      field: 'type',
+      headerName: 'Type',
+      width: 100,
+      renderCell: (params) => (
+        <Typography 
+          sx={{ 
+            color: params.value === 'Income' ? '#2e7d32' : '#d32f2f',
+            fontWeight: 500 
+          }}
+        >
+          {params.value}
+        </Typography>
+      ),
+    },
+    {
+      field: 'amount',
+      headerName: 'Amount',
+      width: 120,
+      renderCell: (params) => (
+        <Typography 
+          sx={{ 
+            color: params.row.type === 'Income' ? '#2e7d32' : '#d32f2f',
+            fontWeight: 600 
+          }}
+        >
+          ${params.value.toLocaleString()}
+        </Typography>
+      ),
+    },
+    {
+      field: 'notes',
+      headerName: 'Notes',
+      flex: 1,
+      minWidth: 150,
+    },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      width: 120,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <IconButton 
+            size="small" 
+            onClick={() => handleEdit(params.row)}
+            sx={{ color: '#500b28' }}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton 
+            size="small" 
+            onClick={() => handleDelete(params.row.id)}
+            sx={{ color: '#d32f2f' }}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Box>
+      ),
+    },
+  ];
+
+  // Custom toolbar for DataGrid
+  const CustomToolbar = () => {
+    return (
+      <GridToolbarContainer>
+        <GridToolbarFilterButton />
+        <GridToolbarDensitySelector />
+      </GridToolbarContainer>
+    );
+  };
 
   return (
-    <div className="card">
-      <h2>Transactions</h2>
+    <Box sx={{ p: { xs: 2, sm: 3 }, bgcolor: '#e2e2e2', minHeight: '100vh' }}>
+      {/* Budget Alerts */}
+      {budgetAlerts.length > 0 && (
+        <Alert 
+          severity="warning" 
+          sx={{ 
+            mb: 3, 
+            bgcolor: '#fff8e1', 
+            borderLeft: '4px solid #500b28',
+            '& .MuiAlert-icon': { color: '#500b28' }
+          }}
+        >
+          <Typography variant="body1" sx={{ fontWeight: 500, color: '#500b28' }}>
+            Budget Alert: {budgetAlerts[0].category} spending exceeded by ${budgetAlerts[0].exceeded}
+          </Typography>
+        </Alert>
+      )}
+
+      {/* Page Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" sx={{ color: '#500b28', fontWeight: 600 }}>
+          Transactions
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleOpenDialog}
+          sx={{ 
+            bgcolor: '#500b28',
+            '&:hover': { bgcolor: '#3c081e' },
+            textTransform: 'none',
+            fontWeight: 500
+          }}
+        >
+          Add Transaction
+        </Button>
+      </Box>
 
       {/* Filters */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
-        <input
-          placeholder="Search description/category…"
-          value={filter.q}
-          onChange={e => setFilter(f => ({ ...f, q: e.target.value }))}
-        />
-        <select value={filter.type} onChange={e => setFilter(f => ({ ...f, type: e.target.value }))}>
-          <option value="all">All</option>
-          <option value="expense">Expense</option>
-          <option value="income">Income</option>
-        </select>
-        <input
-          type="month"
-          value={filter.month}
-          onChange={e => setFilter(f => ({ ...f, month: e.target.value }))}
-        />
-      </div>
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ color: '#500b28' }}>
+              Filters
+            </Typography>
+            <IconButton 
+              onClick={() => setShowFilters(!showFilters)}
+              size="small"
+            >
+              {showFilters ? <CloseIcon /> : <FilterListIcon />}
+            </IconButton>
+          </Box>
+          
+          <Collapse in={showFilters}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Type"
+                  value={filters.type}
+                  onChange={(e) => handleFilterChange('type', e.target.value)}
+                >
+                  <MenuItem value="All">All</MenuItem>
+                  <MenuItem value="Income">Income</MenuItem>
+                  <MenuItem value="Expense">Expense</MenuItem>
+                </TextField>
+              </Grid>
+              
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Category"
+                  value={filters.category}
+                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                >
+                  <MenuItem value="All">All Categories</MenuItem>
+                  {mockCategories.map(category => (
+                    <MenuItem key={category} value={category}>{category}</MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  fullWidth
+                  label="Search"
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  placeholder="Notes or category"
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6} md={3}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={handleResetFilters}
+                  sx={{ height: '100%' }}
+                >
+                  Reset Filters
+                </Button>
+              </Grid>
+            </Grid>
+            
+            <Divider sx={{ my: 2 }} />
+            
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    label="Start Date"
+                    value={filters.dateRange[0]}
+                    onChange={(newValue) => handleFilterChange('dateRange', [newValue, filters.dateRange[1]])}
+                    renderInput={(params) => <TextField {...params} fullWidth />}
+                  />
+                </LocalizationProvider>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    label="End Date"
+                    value={filters.dateRange[1]}
+                    onChange={(newValue) => handleFilterChange('dateRange', [filters.dateRange[0], newValue])}
+                    renderInput={(params) => <TextField {...params} fullWidth />}
+                  />
+                </LocalizationProvider>
+              </Grid>
+            </Grid>
+          </Collapse>
+        </CardContent>
+      </Card>
 
-      {/* Summary */}
-      <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-        <strong>Income: {total.income.toFixed(2)}</strong>
-        <strong>Expense: {total.expense.toFixed(2)}</strong>
-        <strong>Balance: {total.balance.toFixed(2)}</strong>
-      </div>
+      {/* Transactions Table */}
+      <Card>
+        <Box sx={{ height: 600, width: '100%' }}>
+          <DataGrid
+            rows={filteredTransactions}
+            columns={columns}
+            components={{
+              Toolbar: CustomToolbar,
+            }}
+            pageSize={10}
+            rowsPerPageOptions={[10, 25, 50]}
+            pagination
+            disableSelectionOnClick
+            sx={{
+              '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
+                outline: 'none',
+              },
+              '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within': {
+                outline: 'none',
+              },
+            }}
+          />
+        </Box>
+      </Card>
 
-      {/* Form */}
-      <div style={{ marginBottom: 16 }}>
-        <h3 style={{ marginTop: 0 }}>{editing ? "Edit transaction" : "Add transaction"}</h3>
-        <TransactionForm
-          initial={editing || undefined}
-          onSubmit={data => editing ? updateTx(editing._id, data) : createTx(data)}
-          onCancel={editing ? () => setEditing(null) : undefined}
-        />
-      </div>
-
-      {/* List */}
-      {loading ? <p>Loading…</p> : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th style={th}>Date</th>
-                <th style={th}>Description</th>
-                <th style={th}>Category</th>
-                <th style={th}>Type</th>
-                <th style={th}>Amount</th>
-                <th style={th}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map(tx => (
-                <tr key={tx._id || `${tx.date}-${tx.description}-${tx.amount}`}>
-                  <td style={td}>{tx.date?.slice(0, 10)}</td>
-                  <td style={td}>{tx.description}</td>
-                  <td style={td}>{tx.category}</td>
-                  <td style={td}>{tx.type}</td>
-                  <td style={td}>{Number(tx.amount).toFixed(2)}</td>
-                  <td style={td}>
-                    <button onClick={() => setEditing(tx)}>Edit</button>
-                    <button onClick={() => deleteTx(tx._id)} style={{ marginLeft: 8 }}>Delete</button>
-                  </td>
-                </tr>
-              ))}
-              {!items.length && (
-                <tr><td style={td} colSpan="6">No transactions found.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      {/* Add/Edit Transaction Dialog */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ color: '#500b28', fontWeight: 600 }}>
+          {editingId ? 'Edit Transaction' : 'Add New Transaction'}
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} sm={6}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Date *"
+                  value={formData.date}
+                  onChange={(newValue) => handleFormChange('date', newValue)}
+                  renderInput={(params) => (
+                    <TextField 
+                      {...params} 
+                      fullWidth 
+                      error={!!formErrors.date}
+                      helperText={formErrors.date}
+                    />
+                  )}
+                />
+              </LocalizationProvider>
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                select
+                fullWidth
+                label="Type *"
+                value={formData.type}
+                onChange={(e) => handleFormChange('type', e.target.value)}
+                error={!!formErrors.type}
+                helperText={formErrors.type}
+              >
+                <MenuItem value="Income">Income</MenuItem>
+                <MenuItem value="Expense">Expense</MenuItem>
+              </TextField>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                select
+                fullWidth
+                label="Category *"
+                value={formData.category}
+                onChange={(e) => handleFormChange('category', e.target.value)}
+                error={!!formErrors.category}
+                helperText={formErrors.category}
+              >
+                {mockCategories.map(category => (
+                  <MenuItem key={category} value={category}>{category}</MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Amount *"
+                type="number"
+                value={formData.amount}
+                onChange={(e) => handleFormChange('amount', e.target.value)}
+                error={!!formErrors.amount}
+                helperText={formErrors.amount}
+                InputProps={{
+                  startAdornment: '$',
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Notes"
+                multiline
+                rows={3}
+                value={formData.notes}
+                onChange={(e) => handleFormChange('notes', e.target.value)}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={handleCloseDialog} variant="outlined">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleFormSubmit} 
+            variant="contained" 
+            sx={{ 
+              bgcolor: '#500b28',
+              '&:hover': { bgcolor: '#3c081e' }
+            }}
+          >
+            {editingId ? 'Update' : 'Add'} Transaction
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
-}
+};
 
-const th = { textAlign: "left", borderBottom: "1px solid #e5e7eb", padding: "8px" };
-const td = { borderBottom: "1px solid #f1f5f9", padding: "8px" };
+export default Transactions;
