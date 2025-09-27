@@ -73,7 +73,7 @@ We followed a structured approach to bring this project from idea to deployment:
 
 1. **Problem & Solution Definition** → Identified challenges in personal finance management and proposed our web-based solution.
 2. **Wireframes & UI/UX Design** → Created mockups for a clean, intuitive interface that simplifies financial tracking.
-3. **Database & ERD Design** → Designed the entity-relationship diagram (ERD) to structure users, transactions, and budgets effectively.
-4. **Agile Team Management (Jira)** → Managed tasks and sprints using Jira, ensuring smooth collaboration through Scrum methodology.
+3. **Agile Team Management (Jira)** → Managed tasks and sprints using Jira, ensuring smooth collaboration through Scrum methodology.
+4. **Database & ERD Design** → Designed the entity-relationship diagram (ERD) to structure users, transactions, and budgets effectively.
 5. **Development** → Backend team built secure APIs; frontend team integrated UI with backend for full functionality.
 6. **Testing & Documentation** → Verified features, API endpoints, and user workflows; documented using Postman and Jira.
