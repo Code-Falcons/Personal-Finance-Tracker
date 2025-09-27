@@ -77,5 +77,3 @@ We followed a structured approach to bring this project from idea to deployment:
 4. **Agile Team Management (Jira)** → Managed tasks and sprints using Jira, ensuring smooth collaboration through Scrum methodology.
 5. **Development** → Backend team built secure APIs; frontend team integrated UI with backend for full functionality.
 6. **Testing & Documentation** → Verified features, API endpoints, and user workflows; documented using Postman and Jira.
-7. **Live Demo** → Deployed the working application for hands-on demonstration of features and usability.
-
