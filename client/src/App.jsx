@@ -10,6 +10,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Dashboard from './pages/Dashboard';
 import Header from "./components/Header.jsx";
+import BudgetSavings from "./pages/BudgetSavings.jsx";
 
 // Custom theme with finance colors
 const theme = createTheme({
@@ -70,6 +71,7 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
+        <Route path="/budget-savings" element={<ProtectedRoute><BudgetSavings /></ProtectedRoute>} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<h2>404 – Page not found</h2>} />

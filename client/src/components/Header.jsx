@@ -43,6 +43,7 @@ const Header = ({ user, onLogout }) => {
     ? [
         { label: 'Dashboard', path: '/dashboard' },
         { label: 'Transactions', path: '/transactions' },
+        { label: 'BudgetSavings', path: '/budget-savings' },
         { label: 'About', path: '/about' },
         { label: 'Contact', path: '/contact' },
       ]
