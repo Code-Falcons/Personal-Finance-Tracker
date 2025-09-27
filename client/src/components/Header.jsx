@@ -21,14 +21,14 @@ const Header = ({ user, onLogout }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
-  
+
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
-  
+
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
@@ -38,7 +38,7 @@ const Header = ({ user, onLogout }) => {
     onLogout();
   };
 
-  const navItems = user 
+  const navItems = user
     ? [
         { label: 'Dashboard', path: '/dashboard' },
         { label: 'Transactions', path: '/transactions' },
@@ -51,49 +51,46 @@ const Header = ({ user, onLogout }) => {
       ];
 
   return (
-    <AppBar 
+    <AppBar
       position="sticky"
-      sx={{ 
+      sx={{
         bgcolor: 'white',
         boxShadow: '0 2px 12px rgba(80, 11, 40, 0.12)',
         borderBottom: '1px solid rgba(80, 11, 40, 0.08)',
         mb: 3,
         top: 0,
-        zIndex: theme.zIndex.appBar
+        zIndex: theme.zIndex.appBar,
       }}
     >
-      <Toolbar sx={{ 
-        minHeight: { xs: 56, sm: 64 },
-        px: { xs: 1.5, sm: 2 }
-      }}>
+      <Toolbar sx={{ minHeight: { xs: 56, sm: 64 }, px: { xs: 1.5, sm: 2 } }}>
         {/* Logo */}
-        <Typography 
-          variant="h6" 
+        <Typography
+          variant="h6"
           component={Link}
-          to={user ? "/dashboard" : "/"}
-          sx={{ 
-            flexGrow: 1, 
-            color: '#500b28', 
+          to={user ? '/dashboard' : '/'}
+          sx={{
+            flexGrow: 1,
+            color: '#500b28',
             fontWeight: 700,
             textDecoration: 'none',
             fontSize: { xs: '1.1rem', sm: '1.25rem' },
             display: 'flex',
             alignItems: 'center',
-            gap: 1
+            gap: 1,
           }}
         >
-          <Box 
-            sx={{ 
-              width: 28, 
-              height: 28, 
-              bgcolor: '#500b28', 
+          <Box
+            sx={{
+              width: 28,
+              height: 28,
+              bgcolor: '#500b28',
               borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'white',
               fontWeight: 700,
-              fontSize: '0.9rem'
+              fontSize: '0.9rem',
             }}
           >
             $
@@ -101,7 +98,7 @@ const Header = ({ user, onLogout }) => {
           Personal Finance Tracker
         </Typography>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation + Logout */}
         {!isMobile && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {navItems.map((item) => (
@@ -109,7 +106,7 @@ const Header = ({ user, onLogout }) => {
                 key={item.path}
                 component={Link}
                 to={item.path}
-                sx={{ 
+                sx={{
                   color: 'text.primary',
                   fontWeight: 500,
                   px: 1.5,
@@ -117,66 +114,49 @@ const Header = ({ user, onLogout }) => {
                   borderRadius: '8px',
                   textTransform: 'none',
                   fontSize: '0.95rem',
-                  transition: 'all 0.2s ease',
-                  '&:hover': { 
+                  '&:hover': {
                     color: '#500b28',
-                    bgcolor: 'rgba(80, 11, 40, 0.04)'
-                  }
+                    bgcolor: 'rgba(80, 11, 40, 0.04)',
+                  },
                 }}
               >
                 {item.label}
               </Button>
             ))}
-            
+
             {user && (
-              <>
-                <Avatar 
-                  sx={{ 
-                    bgcolor: '#500b28', 
-                    width: 36, 
-                    height: 36, 
-                    ml: 1,
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s',
-                    '&:hover': { transform: 'scale(1.05)' }
-                  }}
-                  onClick={handleMenuOpen}
-                >
-                  {user.initials || 'JD'}
-                </Avatar>
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  size="small"
-                  onClick={onLogout}
-                >
-                  Logout
-                </Button>
-              </>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleLogout}
+                sx={{
+                  borderColor: '#500b28',
+                  color: '#500b28',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  '&:hover': {
+                    bgcolor: 'rgba(80, 11, 40, 0.08)',
+                    borderColor: '#500b28',
+                  },
+                }}
+              >
+                Logout
+              </Button>
             )}
           </Box>
         )}
 
-        {/* Mobile Menu Button */}
+        {/* Mobile Menu Trigger */}
         {isMobile && (
           <IconButton
             edge="end"
             color="inherit"
             aria-label="menu"
             onClick={user ? handleMenuOpen : () => navigate('/login')}
-            sx={{ 
-              color: '#500b28',
-              ml: 1
-            }}
+            sx={{ color: '#500b28', ml: 1 }}
           >
             {user ? (
-              <Avatar 
-                sx={{ 
-                  width: 32, 
-                  height: 32, 
-                  bgcolor: '#500b28' 
-                }}
-              >
+              <Avatar sx={{ width: 32, height: 32, bgcolor: '#500b28' }}>
                 {user.initials || 'JD'}
               </Avatar>
             ) : (
@@ -185,13 +165,12 @@ const Header = ({ user, onLogout }) => {
           </IconButton>
         )}
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu (with Logout) */}
         {isMobile && user && (
           <Menu
             anchorEl={anchorEl}
             open={open}
             onClose={handleMenuClose}
-            onClick={handleMenuClose}
             PaperProps={{
               elevation: 0,
               sx: {
@@ -203,8 +182,8 @@ const Header = ({ user, onLogout }) => {
                 '& .MuiMenuItem-root': {
                   py: 1.2,
                   px: 2,
-                  fontSize: '0.95rem'
-                }
+                  fontSize: '0.95rem',
+                },
               },
             }}
             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
@@ -220,25 +199,26 @@ const Header = ({ user, onLogout }) => {
             </Box>
             <Divider />
             {navItems.map((item) => (
-              <MenuItem 
+              <MenuItem
                 key={item.path}
                 component={Link}
                 to={item.path}
-                sx={{ 
+                onClick={handleMenuClose}
+                sx={{
                   color: 'text.primary',
-                  '&:hover': { bgcolor: 'rgba(80, 11, 40, 0.08)' }
+                  '&:hover': { bgcolor: 'rgba(80, 11, 40, 0.08)' },
                 }}
               >
                 {item.label}
               </MenuItem>
             ))}
             <Divider />
-            <MenuItem 
+            <MenuItem
               onClick={handleLogout}
-              sx={{ 
+              sx={{
                 color: '#d32f2f',
                 fontWeight: 500,
-                '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.08)' }
+                '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.08)' },
               }}
             >
               Logout
