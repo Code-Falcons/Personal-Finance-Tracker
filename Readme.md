@@ -3,6 +3,9 @@
 A secure, intuitive web application that empowers users to take control of their finances—track income and expenses, set realistic budgets, and gain actionable insights through dynamic visualizations.
 
 ---
+<img width="960" height="540" alt="image" src="https://github.com/user-attachments/assets/74b177e7-006e-4878-ae77-50a681c81828" />
+
+---
 
 ## 📝 Introduction
 
