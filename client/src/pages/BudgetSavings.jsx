@@ -451,6 +451,7 @@ const BudgetSavings = () => {
                       borderRadius: '16px', 
                       boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
                       height: '100%',
+                      width: '30vw',
                       border: isNear ? '2px solid #2e7d32' : 'none',
                       display: 'flex',
                       flexDirection: 'column'
@@ -499,7 +500,7 @@ const BudgetSavings = () => {
 
       {/* Charts */}
       <Grid container spacing={3} sx={{ mb: 5 }}>
-        <Grid item xs={12} md={7}>
+        <Grid item xs={12} md={7} sx={{ width: '45vw' }}>
           <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', height: '100%' }}>
             <CardContent>
               <Typography variant="h6" sx={{ color: '#500b28', fontWeight: 600, mb: 2, fontSize: '1.125rem' }}>
@@ -521,7 +522,7 @@ const BudgetSavings = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={5}>
+        <Grid item xs={12} md={5} sx={{ width: '45vw' }}>
           <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', height: '100%' }}>
             <CardContent>
               <Typography variant="h6" sx={{ color: '#500b28', fontWeight: 600, mb: 2, fontSize: '1.125rem' }}>
