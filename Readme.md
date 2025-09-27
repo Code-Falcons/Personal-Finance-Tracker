@@ -8,7 +8,7 @@ A secure, intuitive web application that empowers users to take control of their
 ### 📝 Introduction
 
 **The Problem**  
-Many individuals struggle to track their income and expenses effectively, leading to poor financial decisions. Without clear visibility into spending habits, it becomes difficult to save, stick to a budget, or plan for the future. Existing tools are often either too complex, lack customization, or fail to provide meaningful insights.
+Many individuals struggle to track their income and expenses effectively, leading to poor financial decisions. Without clear visibility into spending habits, it becomes difficult to save, stick to a budget, or plan for the future.
 
 **Our Solution**  
 We built **Personal Finance Tracker**—a secure, intuitive web application that simplifies financial management for individuals *and* aligns with small business needs for basic expense tracking. 
@@ -44,7 +44,7 @@ We built **Personal Finance Tracker**—a secure, intuitive web application that
 
 | Category          | Details                                      |
 |-------------------|----------------------------------------------|
-| **Platform**      | Web Application (Responsive Frontend)        |
+| **Platform**      | Web Application        |
 | **Domain**        | Personal Finance / FinTech                   |
 | **Core Modules**  | User Auth • Transaction Tracking • Budgeting • Reporting |
 
