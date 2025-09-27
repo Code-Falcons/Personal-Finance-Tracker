@@ -31,7 +31,6 @@ We built **Personal Finance Tracker**—a secure, intuitive web application that
 * **📊 Smart Budgeting** – Create monthly budgets with real-time alerts and visual indicators.
 * **📈 Data Visualization** – Interactive charts: income vs. expenses, spending by category, monthly trends.
 * **📌 User Dashboard** – Summary cards, charts, and quick access to core features.
-* **📂 Reports & Insights** – Export-ready analytics with future AI-driven predictions.
 
 ---
 
