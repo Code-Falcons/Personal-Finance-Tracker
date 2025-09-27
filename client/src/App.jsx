@@ -5,7 +5,7 @@ import Register from "./pages/Register.jsx";
 import Transactions from "./pages/Transactions.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import About from "./pages/About.jsx";
-import Contact from "./pages/Contact.jsx";
+// import Contact from "./pages/Contact.jsx";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Dashboard from './pages/Dashboard';
@@ -73,7 +73,7 @@ export default function App() {
         <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
         <Route path="/budget-savings" element={<ProtectedRoute><BudgetSavings /></ProtectedRoute>} />
         <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
+        {/* <Route path="/contact" element={<Contact />} /> */}
         <Route path="*" element={<h2>404 – Page not found</h2>} />
       </Routes>
     </ThemeProvider>
