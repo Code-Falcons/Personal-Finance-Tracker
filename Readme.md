@@ -1,29 +1,53 @@
+# 💰 Personal Finance Tracker
 
-# Personal Finance Tracker
+A secure, intuitive web application that empowers users to take control of their finances—track income and expenses, set realistic budgets, and gain actionable insights through dynamic visualizations.
 
-A web-based application designed to help users securely track their income and expenses, set budgets, and visualize their financial habits with charts and reports.
+---
 
-## 📌 Project Links
+## 🔗 Project Links
 
-* **GitHub Repository:** [https://github.com/Code-Falcons](https://github.com/Code-Falcons)
+- **GitHub Repository**: [https://github.com/Code-Falcons](https://github.com/Code-Falcons)  
+- **Postman API Documentation**: [View Docs](https://documenter.getpostman.com/view/27338446/2sB3HjLfyS)  
+- **Jira Project Board**: [PFT Project Tracker](https://bahaaisl10.atlassian.net/jira/software/projects/PFT/summary)
 
-## 🚀 Features
+---
 
-* Secure login and registration (JWT + bcrypt).
-* Add, edit, delete, and filter transactions by type, date, and category.
-* Budget creation with overspending alerts.
-* Visual charts for income vs expenses and category spending.
-* Export reports to **CSV** or **PDF**.
-* (Future scope) Multi-currency support and real-time alerts.
+## 🚀 Key Features
 
-## 🎯 Goals
+- **Secure Authentication**: JWT-based login & registration with password hashing (bcrypt).  
+- **Transaction Management**: Add, edit, delete, and filter transactions by type (income/expense), date, or category.  
+- **Smart Budgeting**: Create monthly budgets with real-time alerts and visual indicators when nearing or exceeding limits.  
+- **Data Visualization**: Interactive charts showing income vs. expenses and spending by category for clear financial insights.
 
-* Provide a secure, user-friendly tool for managing finances.
-* Help users stay within budget and build better money habits.
-* Offer clear, visual insights into spending patterns.
+---
 
-## 🛠️ Tech Scope
+## 🎯 Project Goals
 
-* **Platform:** Web Application
-* **Domain:** Personal Finance / FinTech
-* **Core Functionalities:** Authentication, Transactions, Budgeting, Reports
+- Deliver a **secure and user-friendly** tool for everyday financial management.  
+- Encourage **responsible spending** and help users stay within budget.  
+- Transform raw transaction data into **actionable visual insights** to foster healthier money habits.
+
+---
+
+## 🛠️ Technical Scope
+
+| Category          | Details                                      |
+|-------------------|----------------------------------------------|
+| **Platform**      | Web Application (Responsive Frontend)        |
+| **Domain**        | Personal Finance / FinTech                   |
+| **Core Modules**  | User Auth • Transaction Tracking • Budgeting • Reporting |
+
+---
+
+## 👥 Team Structure
+
+- **Backend Team**: 2 developers  
+  - Built RESTful APIs  
+  - Implemented authentication
+  - Documented endpoints via Postman  
+
+- **Frontend Team**: 2 developers  
+  - Built UI/UX
+  - Add, edit, delete, filter transactions 
+  - Connected frontend to backend services  
+
