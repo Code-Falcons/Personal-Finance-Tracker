@@ -109,6 +109,19 @@ Our stack combines **modern frontend frameworks**, **scalable backend technologi
 
 ---
 
+## ⚡ Challenges We Faced
+
+During the development of this project, our team encountered several personal and professional challenges that required strong collaboration and adaptability:
+
+* Different Time Zones & Commitments → One of our members was abroad starting a new job, making time coordination more complex.
+* Industry Experience vs. Academic Workload → Another member was already employed in the tech industry, needing to balance professional tasks with academic responsibilities.
+* Training & Workload Management → Some team members were simultaneously engaged in internships and part-time jobs, which created additional scheduling challenges.
+* Transition from Graduation → A member who had recently graduated faced the challenge of adapting to new responsibilities while contributing effectively to the project.
+
+Despite these challenges, we relied on clear communication, agile practices, and strong teamwork to stay on track. This experience strengthened our problem-solving skills and taught us how to deliver under real-world constraints.
+
+---
+
 ## 📊 Future Enhancements
 
 * AI-powered **spending insights** and predictions.
@@ -116,3 +129,5 @@ Our stack combines **modern frontend frameworks**, **scalable backend technologi
 * Export financial reports to **PDF/Excel**.
 * Notifications for overspending or low balance.
 * Mobile-first PWA version.
+  
+
